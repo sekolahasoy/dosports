@@ -268,6 +268,28 @@ position: relative;
     opacity: 1;
     transform: translateX(-50%) translateY(0);
 } 
+.watch {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+
+.watch button {
+position: relative;
+  border-radius: 6px;
+    background: linear-gradient(45deg, #3BC1A8, #1C4D8D);
+    color: #fff;
+    font-weight: bold;
+    cursor: pointer;
+     border: none;
+      padding: 10px;
+    margin-bottom: 8px;
+    flex: 1 1 calc(25% - 8px);
+}
+.watch button:hover {
+    opacity: 0.85;
+}
 
 /* -----------------------------
    BADGES
@@ -759,7 +781,7 @@ function renderEvents(events) {
                     </div>
                     </div>
                     <br>
-                    <div class="channels">
+                    <div class="watch">
                 <button class="watch-now">▶ Watch Now</button>
                 </div>
             </div>
