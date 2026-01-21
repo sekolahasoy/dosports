@@ -482,75 +482,58 @@ footer {
 
 
 <script>
-/* -----------------------------
+/* =============================
    GLOBAL STATE
-------------------------------*/
+============================= */
 let allEvents = [];
 let activeFlippedCard = null;
+
 let currentChannels = [];
 let currentChannelIndex = 0;
 
-
 const API_URL = "https://beta.adstrim.ru/api/events/";
+
 const gridEl = document.getElementById("grid");
 const statusEl = document.getElementById("status");
 const searchInput = document.getElementById("searchInput");
-const COUNTDOWN_THRESHOLD_MIN = 25;
-const COUNTDOWN_THRESHOLD_MS = COUNTDOWN_THRESHOLD_MIN * 60 * 1000;
+
 const modal = document.getElementById("playerModal");
 const popupPlayer = document.getElementById("popupPlayer");
 const closeBtn = document.querySelector(".player-close");
 const overlay = document.querySelector(".player-overlay");
 const playerBox = document.querySelector(".player-box");
+
+const COUNTDOWN_THRESHOLD_MS = 25 * 60 * 1000;
+
 const EXCLUDED_TOURNAMENT_IDS = ["266"];
+
 const SPORT_TV_GUIDE_MAP = {
-    "league1.png": "17", // Premier League
-    "league2.png": "8",  // LaLiga
-    "league3.png": "23", // Serie A
-    "league4.png": "35", // Bundesliga
-    "league6.png": "34",  // Ligue 1
+    "league1.png": "17",
+    "league2.png": "8",
+    "league3.png": "23",
+    "league4.png": "35",
+    "league6.png": "34",
     "league19.png": "7",
     "league26.png": "132",
     "league76.png": "2363",
     "league77.png": "2363"
 };
 
-/* -----------------------------
+/* =============================
    TIME HELPERS
-------------------------------*/
+============================= */
 function formatLocalTime(unixSeconds) {
     const date = new Date(unixSeconds * 1000);
     const now = new Date();
 
-    // Normalize dates (ignore time)
-    const today = new Date(
-        now.getFullYear(),
-        now.getMonth(),
-        now.getDate()
-    );
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const eventDay = new Date(date.getFullYear(), date.getMonth(), date.getDate());
 
-    const eventDay = new Date(
-        date.getFullYear(),
-        date.getMonth(),
-        date.getDate()
-    );
+    const diffDays = Math.round((eventDay - today) / 86400000);
+    const timeStr = date.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
 
-    const diffDays = Math.round(
-        (eventDay - today) / (24 * 60 * 60 * 1000)
-    );
-
-    const timeStr = date.toLocaleTimeString(undefined, {
-        hour: "2-digit",
-        minute: "2-digit"
-    });
-
-    if (diffDays === 0) {
-        return `Today at ${timeStr}`;
-    }
-
-    if (diffDays === 1) {
-        return `Tomorrow at ${timeStr}`;
-    }
+    if (diffDays === 0) return `Today at ${timeStr}`;
+    if (diffDays === 1) return `Tomorrow at ${timeStr}`;
 
     return date.toLocaleString(undefined, {
         weekday: "short",
@@ -561,12 +544,11 @@ function formatLocalTime(unixSeconds) {
     });
 }
 
-
 function isUpcomingOrLive(event) {
     const now = Date.now();
     const start = event.timestamp * 1000;
-    const durationMs = (event.duration || 0) * 60000;
-    return now < start + durationMs;
+    const end = start + (event.duration || 0) * 60000;
+    return now < end;
 }
 
 function isLive(event) {
@@ -581,72 +563,30 @@ function getBadgeState(event) {
     const start = event.timestamp * 1000;
     const end = start + (event.duration || 0) * 60000;
 
-    if (now >= start && now < end) {
-        return { type: "live", text: "LIVE" };
-    }
+    if (now >= start && now < end) return { type: "live", text: "LIVE" };
 
     const diff = start - now;
-
     if (diff <= COUNTDOWN_THRESHOLD_MS) {
-        const totalSeconds = Math.floor(diff / 1000);
-        const minutes = Math.floor(totalSeconds / 60);
-        const seconds = totalSeconds % 60;
-
-        return {
-            type: "countdown",
-            text: `Starts in ${minutes}:${seconds.toString().padStart(2, "0")}`
-        };
+        const m = Math.floor(diff / 60000);
+        const s = Math.floor((diff % 60000) / 1000);
+        return { type: "countdown", text: `Starts in ${m}:${String(s).padStart(2, "0")}` };
     }
 
     return { type: "upcoming", text: "UPCOMING" };
 }
 
+/* =============================
+   TOURNAMENT + SORTING
+============================= */
 function getTournamentId(event) {
     const img = event.league_image || "";
+    const sofa = img.match(/unique-tournament\/(\d+)\//);
+    if (sofa) return sofa[1];
 
-    // 1️⃣ Try SofaScore format first
-    const sofaMatch = img.match(/unique-tournament\/(\d+)\//);
-    if (sofaMatch) {
-        return sofaMatch[1];
-    }
-
-    // 2️⃣ Fallback: Sport-TV-Guide mapping
-    const fileName = img.split("/").pop();
-    if (SPORT_TV_GUIDE_MAP[fileName]) {
-        return SPORT_TV_GUIDE_MAP[fileName];
-    }
-
-    return null; // unknown tournament
-}
-      
-function sortEvents(events) {
-    const PINNED_IDS = ["17", "8", "23", "35", "34", "7", "132", "2363"];
-
-    function tournamentRank(event) {
-        const id = getTournamentId(event);
-        const index = PINNED_IDS.indexOf(id);
-        return index === -1 ? PINNED_IDS.length : index;
-    }
-
-    return [...events].sort((a, b) => {
-        const aLive = isLive(a);
-        const bLive = isLive(b);
-
-        /* 1️⃣ LIVE always first */
-        if (aLive && !bLive) return -1;
-        if (!aLive && bLive) return 1;
-
-        /* 2️⃣ Pinned tournaments (league priority) */
-        const rankDiff = tournamentRank(a) - tournamentRank(b);
-        if (rankDiff !== 0) return rankDiff;
-
-        /* 3️⃣ Earlier kickoff */
-        return a.timestamp - b.timestamp;
-    });
+    const file = img.split("/").pop();
+    return SPORT_TV_GUIDE_MAP[file] || null;
 }
 
-
-      
 function isExcludedTournament(event) {
     const img = event.league_image || "";
     return EXCLUDED_TOURNAMENT_IDS.some(id =>
@@ -654,51 +594,69 @@ function isExcludedTournament(event) {
     );
 }
 
-/* -----------------------------
+function sortEvents(events) {
+    const PINNED_IDS = ["17", "8", "23", "35", "34", "7", "132", "2363"];
+
+    function rank(event) {
+        const id = getTournamentId(event);
+        const idx = PINNED_IDS.indexOf(id);
+        return idx === -1 ? PINNED_IDS.length : idx;
+    }
+
+    return [...events].sort((a, b) => {
+        if (isLive(a) && !isLive(b)) return -1;
+        if (!isLive(a) && isLive(b)) return 1;
+
+        const r = rank(a) - rank(b);
+        if (r !== 0) return r;
+
+        return a.timestamp - b.timestamp;
+    });
+}
+
+/* =============================
    POPUP PLAYER
-------------------------------*/
+============================= */
 function openPlayer(channels) {
-    if (!channels.length) return;
+    if (!channels || !channels.length) return;
 
     currentChannels = channels;
     currentChannelIndex = 0;
 
     renderPlayerChannels();
-    loadChannel(currentChannelIndex);
+    loadChannel(0);
 
     modal.classList.remove("hidden");
 }
+
 function loadChannel(index) {
     const ch = currentChannels[index];
     if (!ch) return;
 
-    const encoded = encodeURIComponent(ch.name);
-
     popupPlayer.innerHTML = `
         <iframe
-            src="https://topembed.pw/channel/${encoded}"
+            src="https://topembed.pw/channel/${encodeURIComponent(ch.name)}"
             allowfullscreen
         ></iframe>
     `;
 }
+
 function renderPlayerChannels() {
     const container = document.querySelector(".player-channels");
-      if (!container) return;
+    if (!container) return;
+
     container.innerHTML = "";
 
-    currentChannels.forEach((ch, index) => {
+    currentChannels.forEach((ch, i) => {
         const btn = document.createElement("button");
-        btn.textContent = `LIVE ${index + 1}`;
+        btn.textContent = `LIVE ${i + 1}`;
         btn.setAttribute("data-tooltip", ch.name);
-
-        if (index === currentChannelIndex) {
-            btn.classList.add("active");
-        }
+        if (i === currentChannelIndex) btn.classList.add("active");
 
         btn.onclick = e => {
             e.stopPropagation();
-            currentChannelIndex = index;
-            loadChannel(index);
+            currentChannelIndex = i;
+            loadChannel(i);
             renderPlayerChannels();
         };
 
@@ -706,40 +664,35 @@ function renderPlayerChannels() {
     });
 }
 
-
-
 function closePlayer() {
-    popupPlayer.innerHTML = ""; // stop playback
+    popupPlayer.innerHTML = "";
     modal.classList.add("hidden");
 }
 
 closeBtn.onclick = closePlayer;
+overlay.onclick = closePlayer;
+
 document.addEventListener("keydown", e => {
-    if (e.key === "Escape" && !modal.classList.contains("hidden")) {
-        closePlayer();
-    }
+    if (e.key === "Escape" && !modal.classList.contains("hidden")) closePlayer();
 });
 
 playerBox.addEventListener("touchstart", () => {
     const channels = document.querySelector(".player-channels");
+    if (!channels) return;
 
     channels.style.opacity = "1";
-    channels.style.pointerEvents = "auto";
     closeBtn.style.opacity = "1";
-    closeBtn.style.pointerEvents = "auto";
 
     clearTimeout(playerBox._hideTimer);
     playerBox._hideTimer = setTimeout(() => {
         channels.style.opacity = "0";
-        channels.style.pointerEvents = "none";
         closeBtn.style.opacity = "0";
-        closeBtn.style.pointerEvents = "none";
     }, 3000);
 });
 
-/* -----------------------------
+/* =============================
    RENDER EVENTS
-------------------------------*/
+============================= */
 function renderEvents(events) {
     gridEl.innerHTML = "";
 
@@ -754,247 +707,119 @@ function renderEvents(events) {
         const card = document.createElement("div");
         card.className = "card";
 
+        const badge = getBadgeState(event);
+
         card.innerHTML = `
         <div class="card-inner">
             <div class="card-face card-front">
                 <div class="league">
                     <img src="${event.league_image}"
-                    onerror="this.onerror=null;this.src='https://cdn-icons-png.flaticon.com/128/3098/3098946.png'">
+                         onerror="this.src='https://cdn-icons-png.flaticon.com/128/3098/3098946.png'">
                     <span>${event.league} • ${event.sport}</span>
                 </div>
-                
+
                 <div class="teams">
                     <div class="team">
                         <img src="${event.home_team_image}"
-                        onerror="this.onerror=null;this.src='https://cdn-icons-png.flaticon.com/128/11743/11743404.png'">
-                        <span class="team-name">${event.home_team}</span>
+                             onerror="this.src='https://cdn-icons-png.flaticon.com/128/11743/11743404.png'">
+                        <span>${event.home_team}</span>
                     </div>
-
                     <div class="vs">VS</div>
-
                     <div class="team">
-                        <span class="team-name">${event.away_team}</span>
+                        <span>${event.away_team}</span>
                         <img src="${event.away_team_image}"
-                        onerror="this.onerror=null;this.src='https://cdn-icons-png.flaticon.com/128/12183/12183336.png'">
+                             onerror="this.src='https://cdn-icons-png.flaticon.com/128/12183/12183336.png'">
                     </div>
                 </div>
-                
+
                 <div class="meta">
-                  ${(() => {
-                      const badge = getBadgeState(event);
-                  
-                      if (badge.type === "live") {
-                          return `
-                              <div class="meta-left">
-                              </div>
-                              <div class="meta-right">
-                                  <span class="badge live">LIVE</span>
-                              </div>
-                          `;
-                      }
-                  
-                      if (badge.type === "countdown") {
-                          return `
-                              <div class="meta-left">
-                              <div class="match-time">
-                                   🕒 ${formatLocalTime(event.timestamp)}
-                              </div>
-                              </div>
-                              <div class="meta-right">
-                                  <span class="badge upcoming countdown"
-                                        data-start="${event.timestamp}">
-                                      ${badge.text}
-                                  </span>
-                              </div>
-                          `;
-                      }
-                  
-                      return `
-                          <div class="meta-left">
-                              <div class="match-time">
-                                   🕒 ${formatLocalTime(event.timestamp)}
-                              </div>
-
-                          </div>
-                          <div class="meta-right">
-                              <span class="badge upcoming">UPCOMING</span>
-                          </div>
-                      `;
-                  })()}
+                    <div>${formatLocalTime(event.timestamp)}</div>
+                    <span class="badge ${badge.type}">${badge.text}</span>
                 </div>
-
             </div>
 
             <div class="card-face card-back">
-                <div class="meta">
-                  ${(() => {
-                      const badge = getBadgeState(event);
-                  
-                      if (badge.type === "live") {
-                          return `
-                              <div class="meta-left">
-                                  <span class="badge live">LIVE</span>
-
-                              </div>
-                          `;
-                      }
-                  
-                      if (badge.type === "countdown") {
-                          return `
-                              <div class="meta">
-                                  <span class="badge upcoming countdown"
-                                        data-start="${event.timestamp}">
-                                      ${badge.text}
-                                  </span>
-
-                              </div>
-                          `;
-                      }
-                  
-                      return `
-                          <div class="meta">
-                              <span class="badge upcoming">UPCOMING</span>
-                          </div>
-                      `;
-                  })()}
-                </div>
-                <br>
-                <div class="teamsback">
-                    <div class="team">
-                        <img src="${event.home_team_image}"
-                        onerror="this.onerror=null;this.src='https://cdn-icons-png.flaticon.com/128/11743/11743404.png'">
-                        <span class="team-name">${event.home_team}</span>
-                    </div>
-
-                    <div class="vs">VS</div>
-
-                    <div class="team">
-                        <span class="team-name">${event.away_team}</span>
-                        <img src="${event.away_team_image}"
-                        onerror="this.onerror=null;this.src='https://cdn-icons-png.flaticon.com/128/12183/12183336.png'">
-                    </div>
-                </div>
-                <br>
-                  <button class="watch-now">▶ Watch Now</button>
+                <button class="watch-now">▶ Watch Now</button>
             </div>
         </div>`;
 
-        /* ---- FLIP LOGIC ---- */
         card.addEventListener("click", e => {
             if (e.target.tagName === "BUTTON") return;
-
             if (activeFlippedCard && activeFlippedCard !== card) {
                 activeFlippedCard.classList.remove("is-flipped");
             }
-
             card.classList.toggle("is-flipped");
             activeFlippedCard = card.classList.contains("is-flipped") ? card : null;
         });
 
-/* -----------------------------
+        card.querySelector(".watch-now").onclick = e => {
+            e.stopPropagation();
+            openPlayer(event.channels || []);
+        };
+
+        gridEl.appendChild(card);
+    });
+}
+
+/* =============================
    LOAD EVENTS
-------------------------------*/
+============================= */
 async function loadEvents() {
     try {
         statusEl.textContent = "Loading events...";
         const res = await fetch(API_URL);
         const json = await res.json();
-
         if (json.status !== "success") throw new Error("API error");
 
-            allEvents = sortEvents(
-                    json.data
-                        .filter(isUpcomingOrLive)
-                        .filter(event => !isExcludedTournament(event))
-              );
-          
-          renderEvents(allEvents);
+        allEvents = sortEvents(
+            json.data.filter(isUpcomingOrLive).filter(e => !isExcludedTournament(e))
+        );
 
+        renderEvents(allEvents);
     } catch (err) {
         console.error(err);
         statusEl.textContent = "Failed to load events.";
     }
 }
 
-/* -----------------------------
+/* =============================
    SEARCH
-------------------------------*/
+============================= */
 searchInput.addEventListener("input", () => {
     const q = searchInput.value.trim().toLowerCase();
+    if (!q) return renderEvents(sortEvents(allEvents));
 
-    if (!q) {
-        renderEvents(sortEvents(allEvents));
-        return;
-    }
-
-    const filtered = allEvents.filter(event => {
-        const league = (event.league || "").toLowerCase();
-        const sport = (event.sport || "").toLowerCase();
-        const home  = (event.home_team || "").toLowerCase();
-        const away  = (event.away_team || "").toLowerCase();
-
-        return (
-            league.includes(q) ||
-            sport.includes(q) ||
-            home.includes(q) ||
-            away.includes(q)
-        );
-    });
-
-    renderEvents(sortEvents(filtered));
+    renderEvents(
+        sortEvents(allEvents.filter(e =>
+            [e.league, e.sport, e.home_team, e.away_team]
+                .some(v => (v || "").toLowerCase().includes(q))
+        ))
+    );
 });
 
-/* -----------------------------
-   AUTO REMOVE FINISHED MATCHES
-------------------------------*/
+/* =============================
+   COUNTDOWN UPDATE
+============================= */
 setInterval(() => {
-    const updated = sortEvents(
-        allEvents.filter(isUpcomingOrLive)
-    );
-
-    if (updated.length !== allEvents.length) {
-        allEvents = updated;
-        activeFlippedCard = null;
-        renderEvents(allEvents);
-    }
-}, 60 * 1000);
-
-
-setInterval(() => {
-    document.querySelectorAll(".badge.countdown").forEach(badge => {
-        const start = badge.dataset.start * 1000;
-        const diff = start - Date.now();
-
+    document.querySelectorAll(".badge.countdown").forEach(b => {
+        const diff = b.dataset.start * 1000 - Date.now();
         if (diff <= 0) {
-            badge.textContent = "LIVE";
-            badge.classList.remove("upcoming", "countdown");
-            badge.classList.add("live");
+            b.textContent = "LIVE";
+            b.className = "badge live";
             return;
         }
-
-        const totalSeconds = Math.floor(diff / 1000);
-        const minutes = Math.floor(totalSeconds / 60);
-        const seconds = totalSeconds % 60;
-
-        badge.textContent = `Starts in ${minutes}:${seconds
-            .toString()
-            .padStart(2, "0")}`;
+        const m = Math.floor(diff / 60000);
+        const s = Math.floor((diff % 60000) / 1000);
+        b.textContent = `Starts in ${m}:${String(s).padStart(2, "0")}`;
     });
 }, 1000);
 
-document.getElementById("resetSearch").onclick = e => {
-    e.preventDefault();
-
-    searchInput.value = "";
-    activeFlippedCard = null;
-
-    renderEvents(sortEvents(allEvents));
-};
-/* -----------------------------
+/* =============================
    INIT
-------------------------------*/
+============================= */
 loadEvents();
 </script>
+
 
 
 </body>
