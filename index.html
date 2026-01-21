@@ -212,7 +212,12 @@ header {
 /* ===============================
    PLAYER CHANNEL OVERLAY
 ================================ */
+.player-box {
+    align-items: flex-start;
+}
 .player-channels {
+     align-self: flex-start;
+    height: auto;
     position: absolute;
     top: 16px;
     left: 16px;
@@ -243,6 +248,8 @@ header {
    CHANNEL BUTTONS
 ================================ */
 .player-channels button {
+          align-self: flex-start;
+    height: auto;
     position: relative;
     border: none;
     padding: 10px 14px;
