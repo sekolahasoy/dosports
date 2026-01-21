@@ -739,7 +739,9 @@ function renderEvents(events) {
             </div>
 
             <div class="card-face card-back">
+            
             <span class="badge ${badge.type}">${badge.text}</span>
+                  <div class="teamsback">
                    <div class="team">
                         <img src="${event.home_team_image}"
                              onerror="this.src='https://cdn-icons-png.flaticon.com/128/11743/11743404.png'">
@@ -751,8 +753,10 @@ function renderEvents(events) {
                         <img src="${event.away_team_image}"
                              onerror="this.src='https://cdn-icons-png.flaticon.com/128/12183/12183336.png'">
                     </div>
+                    </div>
                 <button class="watch-now">▶ Watch Now</button>
             </div>
+            
         </div>`;
 
         card.addEventListener("click", e => {
