@@ -761,7 +761,7 @@ function closePlayer() {
 }
 
 closeBtn.onclick = closePlayer;
-overlay.onclick = closePlayer;
+
 
 document.addEventListener("keydown", e => {
     if (e.key === "Escape" && !modal.classList.contains("hidden")) closePlayer();
