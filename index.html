@@ -213,14 +213,15 @@ header {
    PLAYER CHANNEL OVERLAY
 ================================ */
 .player-box {
-    align-items: flex-end;
+   position: relative;
 }
 .player-channels {
      align-self: flex-start;
     height: auto;
     position: absolute;
-    top: 16px;
+    top: auto;
     left: 16px;
+      bottom: 16px;
     display: flex;
     gap: 8px;
     z-index: 50;
@@ -288,9 +289,9 @@ header {
 .player-channels button::after {
     content: attr(data-tooltip);
     position: absolute;
-    top: 6px;
+    bottom: calc(100% + 8px);
     left: 50%;
-    transform: translate(-50%, 100%);
+    transform: translateX(-50%);
 
     background: rgba(0, 0, 0, 0.9);
     color: #fff;
@@ -302,35 +303,38 @@ header {
 
     opacity: 0;
     pointer-events: none;
-    transition:
-        opacity 0.15s ease,
-        transform 0.15s ease;
-
+    transition: opacity 0.15s ease, transform 0.15s ease;
     z-index: 100;
 }
+
 
 /* tooltip arrow */
 .player-channels button::before {
     content: "";
     position: absolute;
-    top: 2px;
+    bottom: 100%;
     left: 50%;
     transform: translateX(-50%);
 
     border-width: 6px;
     border-style: solid;
-    border-color: transparent transparent rgba(0, 0, 0, 0.9) transparent;
+    border-color: rgba(0, 0, 0, 0.9) transparent transparent transparent;
 
     opacity: 0;
     transition: opacity 0.15s ease;
 }
 
+
 /* show tooltip */
-.player-channels button:hover::after,
+.player-channels button:hover::after {
+    opacity: 1;
+    transform: translateX(-50%) translateY(-4px);
+}
+
 .player-channels button:hover::before {
     opacity: 1;
-    transform: translate(-50%, 110%);
 }
+
 
 /* ===============================
    MOBILE (always visible)
