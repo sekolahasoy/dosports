@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -337,6 +336,25 @@ footer {
 /* -----------------------------
    POPUP PLAYER
 ------------------------------*/
+.player-channels {
+    position: absolute;
+    bottom: 14px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 8px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+    z-index: 5;
+}
+
+.player-box:hover .player-channels,
+.player-box:hover .player-close {
+    opacity: 1;
+    pointer-events: auto;
+}
+
 .player-modal {
     position: fixed;
     inset: 0;
@@ -450,11 +468,17 @@ footer {
 <div id="playerModal" class="player-modal hidden">
     <div class="player-overlay"></div>
 
-    <div class="player-box">
+    <div class="player-box" id="playerBox">
         <button class="player-close">✕</button>
+
+        <!-- CHANNEL OVERLAY -->
+        <div class="player-channels"></div>
+
+        <!-- VIDEO -->
         <div id="popupPlayer"></div>
     </div>
 </div>
+
 
 
 <script>
@@ -463,6 +487,9 @@ footer {
 ------------------------------*/
 let allEvents = [];
 let activeFlippedCard = null;
+let currentChannels = [];
+let currentChannelIndex = 0;
+
 
 const API_URL = "https://beta.adstrim.ru/api/events/";
 const gridEl = document.getElementById("grid");
@@ -630,6 +657,54 @@ function isExcludedTournament(event) {
 /* -----------------------------
    POPUP PLAYER
 ------------------------------*/
+function openPlayer(channels) {
+    if (!channels.length) return;
+
+    currentChannels = channels;
+    currentChannelIndex = 0;
+
+    renderPlayerChannels();
+    loadChannel(currentChannelIndex);
+
+    modal.classList.remove("hidden");
+}
+function loadChannel(index) {
+    const ch = currentChannels[index];
+    if (!ch) return;
+
+    const encoded = encodeURIComponent(ch.name);
+
+    popupPlayer.innerHTML = `
+        <iframe
+            src="https://topembed.pw/channel/${encoded}"
+            allowfullscreen
+        ></iframe>
+    `;
+}
+function renderPlayerChannels() {
+    const container = document.querySelector(".player-channels");
+    container.innerHTML = "";
+
+    currentChannels.forEach((ch, index) => {
+        const btn = document.createElement("button");
+        btn.textContent = `LIVE ${index + 1}`;
+        btn.setAttribute("data-tooltip", ch.name);
+
+        if (index === currentChannelIndex) {
+            btn.classList.add("active");
+        }
+
+        btn.onclick = e => {
+            e.stopPropagation();
+            currentChannelIndex = index;
+            loadChannel(index);
+            renderPlayerChannels();
+        };
+
+        container.appendChild(btn);
+    });
+}
+
 function openPlayer(channelName) {
     const encoded = encodeURIComponent(channelName);
 
@@ -666,6 +741,12 @@ playerBox.addEventListener("touchstart", () => {
     }, 3000);
 });
 
+const watchBtn = card.querySelector(".watch-now");
+
+watchBtn.onclick = e => {
+    e.stopPropagation();
+    openPlayer(event.channels || []);
+};
 
 /* -----------------------------
    RENDER EVENTS
@@ -805,8 +886,7 @@ function renderEvents(events) {
                     </div>
                 </div>
                 <br>
-                <div class="channels"></div>
-                <div class="player"></div>
+                  <button class="watch-now">▶ Watch Now</button>
             </div>
         </div>`;
 
