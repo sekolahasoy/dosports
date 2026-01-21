@@ -683,6 +683,7 @@ function loadChannel(index) {
 }
 function renderPlayerChannels() {
     const container = document.querySelector(".player-channels");
+      if (!container) return;
     container.innerHTML = "";
 
     currentChannels.forEach((ch, index) => {
@@ -705,18 +706,7 @@ function renderPlayerChannels() {
     });
 }
 
-function openPlayer(channelName) {
-    const encoded = encodeURIComponent(channelName);
 
-    popupPlayer.innerHTML = `
-        <iframe
-            src="https://topembed.pw/channel/${encoded}"
-            allowfullscreen>
-        </iframe>
-    `;
-
-    modal.classList.remove("hidden");
-}
 
 function closePlayer() {
     popupPlayer.innerHTML = ""; // stop playback
@@ -731,22 +721,21 @@ document.addEventListener("keydown", e => {
 });
 
 playerBox.addEventListener("touchstart", () => {
+    const channels = document.querySelector(".player-channels");
+
+    channels.style.opacity = "1";
+    channels.style.pointerEvents = "auto";
     closeBtn.style.opacity = "1";
     closeBtn.style.pointerEvents = "auto";
 
     clearTimeout(playerBox._hideTimer);
     playerBox._hideTimer = setTimeout(() => {
+        channels.style.opacity = "0";
+        channels.style.pointerEvents = "none";
         closeBtn.style.opacity = "0";
         closeBtn.style.pointerEvents = "none";
     }, 3000);
 });
-
-const watchBtn = card.querySelector(".watch-now");
-
-watchBtn.onclick = e => {
-    e.stopPropagation();
-    openPlayer(event.channels || []);
-};
 
 /* -----------------------------
    RENDER EVENTS
@@ -902,25 +891,7 @@ function renderEvents(events) {
             activeFlippedCard = card.classList.contains("is-flipped") ? card : null;
         });
 
-         /* ---- CHANNELS ---- */
-         const channelsEl = card.querySelector(".channels");
-         
-         (event.channels || []).forEach((ch, index) => {
-             const btn = document.createElement("button");
-         
-             btn.textContent = `LIVE ${index + 1}`;
-             // 🔹 tooltip text
-             btn.setAttribute("data-tooltip", ch.name);
-             btn.onclick = e => {
-                 e.stopPropagation();
-                 openPlayer(ch.name);
-             };
-         
-             channelsEl.appendChild(btn);
-         });
 
-        gridEl.appendChild(card);
-    });
 }
 
 /* -----------------------------
@@ -955,7 +926,7 @@ searchInput.addEventListener("input", () => {
     const q = searchInput.value.trim().toLowerCase();
 
     if (!q) {
-        renderEvents(sortEvents(filtered));
+        renderEvents(sortEvents(allEvents));
         return;
     }
 
