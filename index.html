@@ -977,6 +977,14 @@ setInterval(() => {
     });
 }, 1000);
 
+document.getElementById("resetSearch").onclick = e => {
+    e.preventDefault();
+
+    searchInput.value = "";
+    activeFlippedCard = null;
+
+    renderEvents(sortEvents(allEvents));
+};   
 /* =============================
    INIT
 ============================= */
