@@ -374,49 +374,50 @@ position: relative;
 ------------------------------*/
 #leagueTags {
     display: flex;
-    justify-content: center;   /* horizontal center */
+    justify-content: center;
     align-items: center;
-    flex-wrap: wrap;           /* wrap on small screens */
+    flex-wrap: wrap;
     gap: 10px;
     margin: 12px 0 18px;
 }
-
 
 .league-tag {
     padding: 6px 14px;
     border-radius: 999px;
     font-size: 13px;
     font-weight: 600;
+
     cursor: pointer;
     user-select: none;
 
-    background: rgba(255, 255, 255, 0.08);
-    color: rgba(255, 255, 255, 0.6);
+    background: rgba(255, 255, 255, 0.12);
+    color: #eaeaea;
 
-    border: 1px solid rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.18);
     backdrop-filter: blur(6px);
 
-    transition: 
+    transition:
         background 0.2s ease,
-        color 0.2s ease,
-        transform 0.15s ease,
-        opacity 0.2s ease;
+        box-shadow 0.2s ease,
+        transform 0.15s ease;
 }
 
 
 .league-tag:hover {
-    background: rgba(255, 255, 255, 0.18);
-    color: #fff;
+    background: rgba(255, 255, 255, 0.22);
     transform: translateY(-1px);
 }
 
 
+
 .league-tag.active {
-    background: linear-gradient(135deg, #3BC1A8, #1C4D8D);
+    background: rgba(255, 255, 255, 0.5);
     color: #fff;
+
     border-color: transparent;
-    box-shadow: 0 4px 12px rgba(59, 193, 168, 0.35);
+    box-shadow: 0 4px 14px rgba(59, 193, 168, 0.45);
 }
+
 .league-tag:not(.active) {
     opacity: 0.85;
 }
