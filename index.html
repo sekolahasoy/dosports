@@ -1028,17 +1028,10 @@ async function loadEvents() {
 /* =============================
    SEARCH
 ============================= */
-searchInput.addEventListener("input", renderFiltered);
-    const q = searchInput.value.trim().toLowerCase();
-    if (!q) return renderEvents(sortEvents(allEvents));
-
-    renderEvents(
-        sortEvents(allEvents.filter(e =>
-            [e.league, e.sport, e.home_team, e.away_team]
-                .some(v => (v || "").toLowerCase().includes(q))
-        ))
-    );
-);
+searchInput.addEventListener("input", () => {
+    activeFlippedCard = null;
+    renderFiltered();
+});
 
 document.getElementById("resetSearch").onclick = e => {
     e.preventDefault();
