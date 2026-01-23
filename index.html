@@ -606,7 +606,7 @@ const overlay = document.querySelector(".player-overlay");
 const playerBox = document.querySelector(".player-box");
 
 const COUNTDOWN_THRESHOLD_MS = 25 * 60 * 1000;
-
+const PINNED_IDS = ["17", "8", "23", "35", "34", "7", "132", "2363"];
 const EXCLUDED_TOURNAMENT_IDS = ["266"];
 
 const SPORT_TV_GUIDE_MAP = {
@@ -697,8 +697,6 @@ function isExcludedTournament(event) {
 }
 
 function sortEvents(events) {
-    const PINNED_IDS = ["17", "8", "23", "35", "34", "7", "132", "2363"];
-
     function rank(event) {
         const id = getTournamentId(event);
         const idx = PINNED_IDS.indexOf(id);
@@ -1070,6 +1068,10 @@ setInterval(() => {
     });
 }, 1000);
 
+/* =============================
+   INIT
+============================= */
+loadEvents();
 
 
 
