@@ -824,26 +824,24 @@ function renderFiltered() {
     // 🔍 search
     const q = searchInput.value.trim().toLowerCase();
     if (q) {
-        result = result.filter(ev => {
-            return (
-                (ev.league || "").toLowerCase().includes(q) ||
-                (ev.sport || "").toLowerCase().includes(q) ||
-                (ev.home_team || "").toLowerCase().includes(q) ||
-                (ev.away_team || "").toLowerCase().includes(q)
-            );
-        });
+        result = result.filter(ev =>
+            (ev.league || "").toLowerCase().includes(q) ||
+            (ev.sport || "").toLowerCase().includes(q) ||
+            (ev.home_team || "").toLowerCase().includes(q) ||
+            (ev.away_team || "").toLowerCase().includes(q)
+        );
     }
 
-    // #️⃣ league hashtag
+    // #️⃣ league hashtag filter
     if (activeLeagueFilter) {
         result = result.filter(
             ev => getTournamentId(ev) === activeLeagueFilter
         );
     }
 
-    renderEvents(result);
-    buildLeagueTags(result);
+    renderEvents(result); // ✅ ONLY this
 }
+
 
 /* =============================
    POPUP PLAYER
