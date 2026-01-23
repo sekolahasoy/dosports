@@ -1028,7 +1028,7 @@ async function loadEvents() {
 /* =============================
    SEARCH
 ============================= */
-searchInput.addEventListener("input", renderFiltered) => {
+searchInput.addEventListener("input", renderFiltered);
     const q = searchInput.value.trim().toLowerCase();
     if (!q) return renderEvents(sortEvents(allEvents));
 
@@ -1038,7 +1038,7 @@ searchInput.addEventListener("input", renderFiltered) => {
                 .some(v => (v || "").toLowerCase().includes(q))
         ))
     );
-});
+);
 
 document.getElementById("resetSearch").onclick = e => {
     e.preventDefault();
