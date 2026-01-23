@@ -1010,15 +1010,25 @@ function renderEvents(events) {
 async function loadEvents() {
     try {
         statusEl.textContent = "Loading events...";
+
         const res = await fetch(API_URL);
         const json = await res.json();
-        if (json.status !== "success") throw new Error("API error");
 
+        if (json.status !== "success") {
+            throw new Error("API error");
+        }
+
+        /* =============================
+           INIT
+        ============================= */
         allEvents = sortEvents(
-            json.data.filter(isUpcomingOrLive).filter(e => !isExcludedTournament(e))
+            json.data
+                .filter(isUpcomingOrLive)
+                .filter(e => !isExcludedTournament(e))
         );
 
-        renderEvents(allEvents);
+        renderFiltered();
+
     } catch (err) {
         console.error(err);
         statusEl.textContent = "Failed to load events.";
@@ -1061,16 +1071,7 @@ setInterval(() => {
 }, 1000);
 
 
-/* =============================
-   INIT
-============================= */
-allEvents = sortEvents(
-    json.data
-        .filter(isUpcomingOrLive)
-        .filter(event => !isExcludedTournament(event))
-);
 
-renderFiltered();
 
 </script>
 
