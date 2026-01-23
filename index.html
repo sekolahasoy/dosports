@@ -369,6 +369,36 @@ position: relative;
 .watch button:hover {
     opacity: 0.85;
 }
+/* -----------------------------
+   HASHTAGS
+------------------------------*/
+.league-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.league-tag {
+  padding: 6px 12px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 13px;
+  backdrop-filter: blur(10px);
+  background: rgba(255,255,255,0.12);
+  color: #fff;
+  transition: all 0.2s ease;
+}
+
+.league-tag:hover {
+  background: rgba(255,255,255,0.22);
+}
+
+.league-tag.active {
+  background: rgba(59,193,168,0.85);
+  color: #000;
+  font-weight: bold;
+}
 
 /* -----------------------------
    BADGES
@@ -724,8 +754,8 @@ function getLeagueNameById(id) {
         "35": "Bundesliga",
         "34": "Ligue1",
         "7": "UCL",
-        "132": "UEL",
-        "2363": "Conference"
+        "132": "NBA",
+        "2363": "AO"
     };
     return map[id] || "League";
 }
