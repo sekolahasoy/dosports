@@ -275,13 +275,13 @@ header {
 
 /* hover = more visible */
 .player-channels button:hover {
-    background: rgba(0, 0, 0, 0.6);
+    background: rgba(0, 0, 0, 0.5);
     transform: translateY(-2px);
 }
 
 /* active channel */
 .player-channels button.active {
-    background: linear-gradient(135deg, #3BC1A8, #1C4D8D);
+     background: rgba(0, 0, 0, 0.8);
     box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.35);
 }
 
@@ -358,10 +358,11 @@ position: relative;
   border-radius: 6px;
 
     background: rgba(255, 255, 255, 0.12);
-    color: #fff;
+     color: #eaeaea;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    backdrop-filter: blur(6px);
     font-weight: bold;
     cursor: pointer;
-     border: none;
       padding: 10px;
     margin-bottom: 8px;
     flex: 1 1 calc(25% - 8px);
