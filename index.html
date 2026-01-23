@@ -1069,14 +1069,21 @@ async function loadEvents() {
         /* =============================
            INIT
         ============================= */
-allEvents = sortEvents(
-    json.data
-        .filter(isUpcomingOrLive)
-        .filter(event => !isExcludedTournament(event))
-);
+        allEvents = sortEvents(
+            json.data
+                .filter(isUpcomingOrLive)
+                .filter(event => !isExcludedTournament(event))
+        );
 
-buildLeagueTags(allEvents); // 🔥 build once
-renderFiltered();
+        buildLeagueTags(allEvents); // ✅ build once from ALL events
+        renderFiltered();           // ✅ apply search / hashtag filters
+
+    } catch (err) {
+        console.error(err);
+        statusEl.textContent = "Failed to load events.";
+    }
+}
+
 
 /* =============================
    SEARCH
