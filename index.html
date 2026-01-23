@@ -556,6 +556,7 @@ footer {
             autocomplete="off"
         />
     </form>
+      <div id="leagueTags" class="league-tags"></div>
 </header>
 
 <div class="container">
@@ -588,7 +589,7 @@ footer {
 ============================= */
 let allEvents = [];
 let activeFlippedCard = null;
-
+let activeLeagueFilter = null; // tournamentId or null
 let currentChannels = [];
 let currentChannelIndex = 0;
 
@@ -713,6 +714,85 @@ function sortEvents(events) {
 
         return a.timestamp - b.timestamp;
     });
+}
+/* =============================
+   HASHTAGS
+============================= */
+function getLeagueNameById(id) {
+    const map = {
+        "17": "PremierLeague",
+        "8": "LaLiga",
+        "23": "SerieA",
+        "35": "Bundesliga",
+        "34": "Ligue1",
+        "7": "UCL",
+        "132": "UEL",
+        "2363": "Conference"
+    };
+    return map[id] || "League";
+}
+
+function buildLeagueTags(events) {
+    const container = document.getElementById("leagueTags");
+    if (!container) return;
+
+    container.innerHTML = "";
+
+    const seen = new Set();
+
+    events.forEach(ev => {
+        const id = getTournamentId(ev);
+        if (!id) return;
+        if (!PINNED_IDS.includes(id)) return;
+        seen.add(id);
+    });
+
+    PINNED_IDS.forEach(id => {
+        if (!seen.has(id)) return;
+
+        const tag = document.createElement("span");
+        tag.className = "league-tag";
+        tag.textContent = `#${getLeagueNameById(id)}`;
+        tag.dataset.id = id;
+
+        if (activeLeagueFilter === id) {
+            tag.classList.add("active");
+        }
+
+        tag.onclick = () => {
+            activeLeagueFilter = activeLeagueFilter === id ? null : id;
+            renderFiltered();
+        };
+
+        container.appendChild(tag);
+    });
+}
+
+function renderFiltered() {
+    let result = [...allEvents];
+
+    // 🔍 search
+    const q = searchInput.value.trim().toLowerCase();
+    if (q) {
+        result = result.filter(ev => {
+            return (
+                (ev.league || "").toLowerCase().includes(q) ||
+                (ev.sport || "").toLowerCase().includes(q) ||
+                (ev.home_team || "").toLowerCase().includes(q) ||
+                (ev.away_team || "").toLowerCase().includes(q)
+            );
+        });
+    }
+
+    // #️⃣ league hashtag
+    if (activeLeagueFilter) {
+        result = result.filter(
+            ev => getTournamentId(ev) === activeLeagueFilter
+        );
+    }
+
+    renderEvents(result);
+    buildLeagueTags(result);
 }
 
 /* =============================
@@ -948,7 +1028,7 @@ async function loadEvents() {
 /* =============================
    SEARCH
 ============================= */
-searchInput.addEventListener("input", () => {
+searchInput.addEventListener("input", renderFiltered) => {
     const q = searchInput.value.trim().toLowerCase();
     if (!q) return renderEvents(sortEvents(allEvents));
 
@@ -959,6 +1039,16 @@ searchInput.addEventListener("input", () => {
         ))
     );
 });
+
+document.getElementById("resetSearch").onclick = e => {
+    e.preventDefault();
+
+    searchInput.value = "";
+    activeFlippedCard = null;
+      activeLeagueFilter = null;
+
+    renderFiltered();
+};   
 
 /* =============================
    COUNTDOWN UPDATE
@@ -977,18 +1067,18 @@ setInterval(() => {
     });
 }, 1000);
 
-document.getElementById("resetSearch").onclick = e => {
-    e.preventDefault();
 
-    searchInput.value = "";
-    activeFlippedCard = null;
-
-    renderEvents(sortEvents(allEvents));
-};   
 /* =============================
    INIT
 ============================= */
-loadEvents();
+allEvents = sortEvents(
+    json.data
+        .filter(isUpcomingOrLive)
+        .filter(event => !isExcludedTournament(event))
+);
+
+renderFiltered();
+
 </script>
 
 
