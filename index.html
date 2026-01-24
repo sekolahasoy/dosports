@@ -171,6 +171,13 @@ header {
     font-weight: bold;
     color: #888;
 }
+.team.away {
+    text-align: right;
+}
+.team.away .team-name {
+    text-align: right;
+    display: block;
+}
 
 .meta {
     display: flex;
@@ -956,8 +963,8 @@ function renderEvents(events) {
                         <span>${event.home_team}</span>
                     </div>
                     <div class="vs">VS</div>
-                    <div class="team">
-                        <span>${event.away_team}</span>
+                    <div class="team away">
+                        <span class="team-name">${event.away_team}</span>
                         <img src="${event.away_team_image}"
                              onerror="this.src='https://cdn-icons-png.flaticon.com/128/12183/12183336.png'">
                     </div>
@@ -1022,8 +1029,8 @@ function renderEvents(events) {
                         <span>${event.home_team}</span>
                     </div>
                     <div class="vs">VS</div>
-                    <div class="team">
-                        <span>${event.away_team}</span>
+                        <div class="team away">
+                        <span class="team-name">${event.away_team}</span>
                         <img src="${event.away_team_image}"
                              onerror="this.src='https://cdn-icons-png.flaticon.com/128/12183/12183336.png'">
                     </div>
