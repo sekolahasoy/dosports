@@ -955,7 +955,7 @@ function renderEvents(events) {
                          onerror="this.src='https://cdn-icons-png.flaticon.com/128/3098/3098946.png'">
                     <span>${event.league} • ${event.sport}</span>
                 </div>
-
+            ${event.home_team && event.away_team ? `
                 <div class="teams">
                     <div class="team">
                         <img src="${event.home_team_image}"
@@ -969,6 +969,13 @@ function renderEvents(events) {
                              onerror="this.src='https://cdn-icons-png.flaticon.com/128/12183/12183336.png'">
                     </div>
                 </div>
+            ` : `
+                <div class="teams title-only">
+                    <div class="event-title">
+                        ${event.title || event.league}
+                    </div>
+                </div>
+            `}
 
  <div class="meta">
                   ${(() => {
