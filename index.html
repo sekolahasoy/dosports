@@ -178,6 +178,21 @@ header {
     text-align: right;
     display: block;
 }
+/* Title-only (no teams) */
+.teams.title-only {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    min-height: 72px;
+}
+
+.event-title {
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 1.3;
+    padding: 0 10px;
+}
 
 .meta {
     display: flex;
@@ -1029,6 +1044,7 @@ function renderEvents(events) {
                     <span class="badge ${badge.type}">${badge.text}</span>
                 </div>
             <br>
+                  ${event.home_team && event.away_team ? `
                   <div class="teamsback">
                    <div class="team">
                         <img src="${event.home_team_image}"
@@ -1042,6 +1058,13 @@ function renderEvents(events) {
                              onerror="this.src='https://cdn-icons-png.flaticon.com/128/12183/12183336.png'">
                     </div>
                     </div>
+                   ` : `
+                      <div class="teams title-only">
+                          <div class="event-title">
+                              ${event.title || event.league}
+                          </div>
+                      </div>
+                  `}
                     <br>
                     <div class="watch">
                 <button class="watch-now">▶ Watch Now</button>
